@@ -1,0 +1,12 @@
+{
+	"manifest_version": 1,
+	"id": "net.benders.joplin-trash",
+	"app_min_version": "1.7",
+	"version": "1.0.0",
+	"name": "Trash",
+	"description": "Move items to &#34;Trash&#34; folder (rather than hard delete)",
+	"author": "brttbndr",
+	"homepage_url": "https://github.com/brttbndr/joplin-trash",
+	"repository_url": "https://github.com/brttbndr/joplin-trash",
+	"keywords": []
+}
