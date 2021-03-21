@@ -1,4 +1,5 @@
 import joplin from 'api';
+import { MenuItemLocation, ToolbarButtonLocation } from 'api/types';
 
 joplin.plugins.register({
 	onStart: async function() {
@@ -25,5 +26,7 @@ joplin.plugins.register({
 				})
 			},
 		});
+
+		await joplin.views.toolbarButtons.create('trashButton', 'trash', ToolbarButtonLocation.NoteToolbar);
 	},
 });
