@@ -7,9 +7,9 @@ joplin.plugins.register({
 			label: 'Trash',
 			iconName: 'fas fa-trash-alt',
 			execute: async () => {
-				// Get the selected note and exit if none is currently selected
-				const selectedNote = await joplin.workspace.selectedNote();
-				if (!selectedNote) return;
+				// Get selected note IDs, bail if none are currently selected
+				const selectedNoteIds = await joplin.workspace.selectedNoteIds();
+				if (selectedNoteIds.length === 0) return;
 
 				// Get the trash folder and create it if it doesn't already exist
 				let trashFolder = await joplin.data.get(['search'], { type: 'folder', query: 'Trash' });
@@ -19,8 +19,10 @@ joplin.plugins.register({
 					trashFolder = trashFolder.items[0];
 				}
 
-				// Move the note to the trash
-				await joplin.data.put(['notes', selectedNote.id], null, { parent_id: trashFolder.id });
+				// Move the notes to the trash
+				selectedNoteIds.forEach(async function (id) {
+					await joplin.data.put(['notes', id], null, { parent_id: trashFolder.id });
+				})
 			},
 		});
 	},
