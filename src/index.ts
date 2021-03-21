@@ -19,6 +19,13 @@ joplin.plugins.register({
 			label: 'Name of Trash notebook (default "Trash")',
 		});
 
+		joplin.settings.onChange(async function (event) {
+			const trashName = await joplin.settings.value(TRASH_NAME);
+			if (trashName.trim() === '') {
+				await joplin.settings.setValue(TRASH_NAME, 'Trash');
+			}
+		});
+
 		await joplin.commands.register({
 			name: 'trash',
 			label: 'Move to Trash',
