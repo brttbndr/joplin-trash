@@ -1,21 +1,39 @@
 import joplin from 'api';
-import { MenuItemLocation, ToolbarButtonLocation } from 'api/types';
+import { MenuItemLocation, SettingItemType, ToolbarButtonLocation } from 'api/types';
+
+const TRASH_NAME = 'trashName';
 
 joplin.plugins.register({
 	onStart: async function() {
+
+		await joplin.settings.registerSection('trashSection', {
+			label: 'Trash',
+			iconName: 'fa fa-trash-alt',
+		});
+
+		await joplin.settings.registerSetting(TRASH_NAME, {
+			value: 'Trash',
+			type: SettingItemType.String,
+			section: 'trashSection',
+			public: true,
+			label: 'Name of Trash notebook (default "Trash")',
+		});
+
 		await joplin.commands.register({
 			name: 'trash',
 			label: 'Move to Trash',
 			iconName: 'fas fa-trash-alt',
 			execute: async () => {
+				const trashName = await joplin.settings.value(TRASH_NAME);
+
 				// Get selected note IDs, bail if none are currently selected
 				const selectedNoteIds = await joplin.workspace.selectedNoteIds();
 				if (selectedNoteIds.length === 0) return;
 
 				// Get or create the trash folder
-				let trashFolder = await joplin.data.get(['search'], { type: 'folder', query: 'Trash' });
+				let trashFolder = await joplin.data.get(['search'], { type: 'folder', query: trashName });
 				if (!trashFolder.items.length) {
-					trashFolder = await joplin.data.post(['folders'], null, { title: 'Trash' });
+					trashFolder = await joplin.data.post(['folders'], null, { title: trashName });
 				} else {
 					trashFolder = trashFolder.items[0];
 				}
