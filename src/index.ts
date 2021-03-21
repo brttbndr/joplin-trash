@@ -28,6 +28,7 @@ joplin.plugins.register({
 		});
 
 		await joplin.views.toolbarButtons.create('trashButton', 'trash', ToolbarButtonLocation.NoteToolbar);
+		await joplin.views.menuItems.create('trashMenuItem', 'trash', MenuItemLocation.Note);
 		await joplin.views.menuItems.create('trashContextMenuItem', 'trash', MenuItemLocation.NoteListContextMenu);
 	},
 });
