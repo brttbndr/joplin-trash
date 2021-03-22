@@ -7,8 +7,38 @@ import {
 
 const TRASH_NAME = "trashName";
 
+const sqlite3 = joplin.require('sqlite3');
+let db = null;
+
+const trashDDL = `
+CREATE TABLE IF NOT EXISTS notes(
+  id TEXT PRIMARY KEY,
+  parent_id TEXT NOT NULL DEFAULT "",
+  trashed_time INT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS notes_trashed_time ON notes (trashed_time);
+`;
+
+async function initializeDB() {
+    const dataDir = await joplin.plugins.dataDir();
+    const dbPath = dataDir + '/trash.db';
+    db = new sqlite3.Database(dbPath);
+    db.serialize(() => db.run(trashDDL));
+}
+
 async function moveNotesToTrash(trash_id: String, ids: String[]) {
+    const now = Date.now();
     ids.forEach(async (id: string) => {
+        const note = await joplin.data.get(["notes", id]);
+        // TODO: should "already in trash" no-op? Or perhaps reset the trashed_time?
+        if (note.parent_id === trash_id) return;
+        db.run(
+            "INSERT INTO notes(id, parent_id, trashed_time) VALUES(?, ?, ?)",
+            id,
+            note.parent_id,
+            now
+        );
         await joplin.data.put(["notes", id], null, { parent_id: trash_id });
     });
 }
@@ -30,6 +60,8 @@ async function getOrCreateTrashFolder(trashName: String) {
 
 joplin.plugins.register({
     onStart: async () => {
+        await initializeDB();
+
         await joplin.settings.registerSection("trashSection", {
             label: "Trash",
             iconName: "fa fa-trash-alt",
