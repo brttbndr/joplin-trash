@@ -43,6 +43,20 @@ async function moveNotesToTrash(trash_id: String, ids: String[]) {
     });
 }
 
+async function restoreNotesFromTrash(trash_id, ids: String[]) {
+    ids.forEach(async (id: string) => {
+        const note = await joplin.data.get(["notes", id]);
+        // TODO: if note is not in trash, what to do?
+        if (note.parent_id != trash_id) return;
+        db.serialize(() => {
+            db.get("SELECT * FROM notes WHERE id = ?", [id], (err, row) => {
+                joplin.data.put(["notes", id], null, { parent_id: row.parent_id });
+            });
+            db.run("DELETE FROM notes WHERE id = ?", id);
+        });
+    });
+}
+
 async function getOrCreateTrashFolder(trashName: String) {
     let trashFolder = await joplin.data.get(["search"], {
         type: "folder",
@@ -95,6 +109,22 @@ joplin.plugins.register({
 
                 const trashFolder = await getOrCreateTrashFolder(trashName);
                 await moveNotesToTrash(trashFolder.id, selectedNoteIds);
+            },
+        });
+
+        await joplin.commands.register({
+            name: "restoreFromTrash",
+            label: "Restore from Trash",
+            iconName: "fas fa-trash-alt",
+            execute: async () => {
+                const trashName = await joplin.settings.value(TRASH_NAME);
+
+                // Get selected note IDs, bail if none are currently selected
+                const selectedNoteIds = await joplin.workspace.selectedNoteIds();
+                if (selectedNoteIds.length === 0) return;
+
+                const trashFolder = await getOrCreateTrashFolder(trashName);
+                await restoreNotesFromTrash(trashFolder.id, selectedNoteIds);
             },
         });
 
